@@ -4,13 +4,14 @@
     import axios from 'axios';
 
     let BASE_RADIUS = 15;
-    let AVERAGE_JAM = 30.494;
+    let AVERAGE_JAM = 393.979; // avg(total - good - reject)
+    let STD_JAM = 372.615 // stddev(total - good - reject)
     let AVERAGE_QUALITY = 0.907;
     let STD_QUALITY = 0.283;
     let AVERAGE_SPEED = 514.498
 
     var nodes_data =  [
-        {'name': 'start', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 1},
+        {'name': 'start', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 0},
         {'name': 'a1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 1},
         {'name': 'a2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 2},
         {'name': 'b1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 3},
@@ -27,19 +28,32 @@
     //Sample links data 
     //type: A for Ally, E for Enemy
     var links_data = [
-        {'source': 'start', 'target': 'a1'},
-        {'source': 'a1', 'target': 'a2'},
-        {'source': 'a2', 'target': 'd1'} ,
-        {'source': 'd1', 'target': 'd2'},
-        {'source': 'd2', 'target': 'd3'},
-        {'source': 'd3', 'target': 'd4'},
-        {'source': 'start', 'target': 'b1'},
-        {'source': 'b1', 'target': 'b2'},
-        {'source': 'b2', 'target': 'd1'},
-        {'source': 'start', 'target': 'c1'},
-        {'source': 'c1', 'target': 'c2'},
-        {'source': 'c2', 'target': 'd1'},
+        {'source': 0, 'target': 1},
+        {'source': 1, 'target': 2},
+        {'source': 0, 'target': 3},
+        {'source': 3, 'target': 4},
+        {'source': 0, 'target': 5},
+        {'source': 5, 'target': 6},
+        {'source': 2, 'target': 7},
+        {'source': 4, 'target': 7},
+        {'source': 6, 'target': 7},
+        {'source': 7, 'target': 8},
+        {'source': 8, 'target': 9},
+        {'source': 9, 'target': 10}
+        // {'source': 'start', 'target': 'a1'},
+        // {'source': 'a1', 'target': 'a2'},
+        // {'source': 'a2', 'target': 'd1'} ,
+        // {'source': 'd1', 'target': 'd2'},
+        // {'source': 'd2', 'target': 'd3'},
+        // {'source': 'd3', 'target': 'd4'},
+        // {'source': 'start', 'target': 'b1'},
+        // {'source': 'b1', 'target': 'b2'},
+        // {'source': 'b2', 'target': 'd1'},
+        // {'source': 'start', 'target': 'c1'},
+        // {'source': 'c1', 'target': 'c2'},
+        // {'source': 'c2', 'target': 'd1'},
     ]
+
 
     onMount(() => {
 
@@ -53,23 +67,36 @@
                             .nodes(nodes_data);
                                     
         var link_force =  d3.forceLink(links_data)
-                                .id(function(d) { return d.name; });            
+                                .distance(function(d, i) {
+                                    if ((d.source.id == 1 && d.target.id == 2) ||
+                                        (d.source.id == 0 && d.target.id == 1) || 
+                                        (d.source.id == 2 && d.target.id == 7)
+                                    ){
+                                        return 60;
+                                    }else if (d.source.id <= 6){
+                                        return 140;
+                                    }else{
+                                        return 40;
+                                    }
+                                })
+                                .id(function(d) { return d.id; });            
                 
         var charge_force = d3.forceManyBody()
-            .strength(-200); 
+            .strength(-400); 
             
         var center_force = d3.forceCenter(width / 3, height / 3);  
+
+        var collide_force = d3.forceCollide(function(d) {return radius(d) * 1.5});
                             
         simulation
             .force("charge_force", charge_force)
             .force("center_force", center_force)
-            .force("collide", d3.forceCollide())
+            .force("collide", collide_force)
             .force("links",link_force);
 
                 
         //add tick instructions: 
         simulation.on("tick", tickActions );
-        simulation.force("collide").radius((d) => {return radius(d) * 1.5})
 
         //add encompassing group for the zoom 
         var g = svg.append("g")
@@ -84,6 +111,13 @@
             .attr("stroke-width", 2)
             .style("stroke", linkColour);        
 
+        // var containers = g.append("g")
+        //                     .attr("class", "containers")
+        //                     .selectAll("g")
+        //                     .data(nodes_data)
+        //                     .enter()
+        //                     .append("g")
+
         //draw circles for the nodes 
         var nodes = g.append("g")
                 .attr("class", "nodes") 
@@ -93,10 +127,16 @@
                 .append("circle")
                 .attr("r", radius)
                 .attr("fill", circleColour)
-                .attr("id", (d) => {
-                    return d.name
-                });
-        
+                // .attr("id", (d) => {
+                //     return d.id
+                // });
+       
+        // var labels = containers.append("text")
+        //                 .text(function(d){
+        //                     return "Machine " + d.name
+        //                 })
+        //                 .attr("x", 6)
+        //                 .attr("y", 3)
         
         // //add drag capabilities  
         var drag_handler = d3.drag()
@@ -117,7 +157,7 @@
 
         function radius(d){
             var jam = d.total - d.nGoods - d.nRejects;
-            var c = jam <= 0 ? 1: Math.log(jam / AVERAGE_JAM + 1);
+            var c = jam <= 0 ? 1: (Math.abs(jam - AVERAGE_JAM) / STD_JAM) + 1;
             return BASE_RADIUS * c;
         }
 
@@ -127,8 +167,8 @@
             var quality = d.total <= 0? 1: d.nGoods / d.total;
             if (quality >= AVERAGE_QUALITY){
                 return "blue";
-            } else if (quality >= AVERAGE_QUALITY - STD_QUALITY){
-                return "green";
+            } else if (quality >= AVERAGE_QUALITY -  2 * STD_QUALITY){
+                return "yellow";
             } else{
                 return "red";
             }
@@ -167,23 +207,12 @@
         }
 
         function tickActions() {
-            simulation
-                .force("charge_force", charge_force)
-                .force("center_force", center_force)
-                .force("collide").radius((d) => {return radius(d) * 1.5})
-            //update circle positions each tick of the simulation 
-
             nodes
-                .data(nodes_data)
-                .attr("r", radius)
-                .attr("fill", circleColour)
                 .attr("cx", function(d) { return d.x; })
                 .attr("cy", function(d) { return d.y; });
                 
             //update link positions 
             links
-                .data(links_data)
-                .style("stroke", linkColour)
                 .attr("x1", function(d) { return d.source.x; })
                 .attr("y1", function(d) { return d.source.y; })
                 .attr("x2", function(d) { return d.target.x; })
@@ -202,47 +231,98 @@
         }
 
         function redraw(){
-            redrawNodes();
             redrawLinks();
+            // redrawNodes();
+
+            simulation
+                .alpha(0.5)
+                .alphaTarget(0.3)
+                .restart();
+            simulation.force('collide').initialize(nodes_data);
         }
 
-        async function update(){
-            const response = await axios.get('http://localhost:8000/core/api/hourly-states/?ordering=sent_at')
-            console.log(response)
-            response.data.results.forEach(element => {
-                nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
-                nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
-                nodes_data[element.machine[element.machine.length -2]].total = element.total;
-                console.log("uwu");
+        var webSocket = new WebSocket('ws://localhost:9000')
+
+        webSocket.onmessage = function(event){
+            var data = JSON.parse(event.data)
+            var arr = nodes_data.reduce(function(arr, e, i){
+                if (e.id == data.id) arr.push(i);
+                return arr;
+            }, [])
+
+            arr.forEach(element => {
+                var target = {
+                    'nGoods': data.good,
+                    'nRejects': data.reject,
+                    'total': data.total
+                }
+
+                // nodes_data[element].nGoods = data.good;
+                // nodes_data[element].nRejects = data.reject;
+                // nodes_data[element].total = data.total;
+
+                nodes
+                    .filter(function(d, i) {return d.id == element })
+                    .transition(1000)
+                    .tween('radius', function(d){
+                        var that = d3.select(this);
+                        var g = d3.interpolate(d.nGoods, target.nGoods);
+                        var r = d3.interpolate(d.nRejects, target.nRejects);
+                        var tot = d3.interpolate(d.total, target.total);
+                        var rad = d3.interpolate(radius(d), radius(target))
+                        return function(t){
+                            that.attr('r', function(d) {
+                                d.nGoods = g(t);
+                                d.nRejects = r(t);
+                                d.total = tot(t);
+                                // if (d.id == 8){
+                                //     console.log('---------------');
+                                //     console.log(radius(d));
+                                //     console.log(d);
+                                // }
+                                return rad(t);
+                                });
+                        }
+                    })
+                    .attr('fill', circleColour)
             });
-            // var i = 1;
-            // var element;
-            // function myLoop(){
-            //     setTimeout(function (){
-            //         element = response.data.results[i];
-            //         nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
-            //         nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
-            //         nodes_data[element.machine[element.machine.length -2]].total = element.total;
-            //         console.log("uwu " + (element.machine.length - 2) + " " +  nodes_data[element.machine[element.machine.length - 2]].total)
-            //         i++;
-            //         if (i < response.data.results.length){
-            //             myLoop();
-            //         }
-            //     }, 200)
-            // }
 
-            // myLoop();
+            redraw();
         }
 
-        update();
+        // async function update(){
+        //     const response = await axios.get('http://localhost:8000/core/api/hourly-states/?ordering=sent_at')
+        //     console.log(response)
+        //     response.data.results.forEach(element => {
+        //         nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
+        //         nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
+        //         nodes_data[element.machine[element.machine.length -2]].total = element.total;
+        //         console.log("uwu");
+        //     });
+        //     // var i = 1;
+        //     // var element;
+        //     // function myLoop(){
+        //     //     setTimeout(function (){
+        //     //         element = response.data.results[i];
+        //     //         nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
+        //     //         nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
+        //     //         nodes_data[element.machine[element.machine.length -2]].total = element.total;
+        //     //         console.log("uwu " + (element.machine.length - 2) + " " +  nodes_data[element.machine[element.machine.length - 2]].total)
+        //     //         i++;
+        //     //         if (i < response.data.results.length){
+        //     //             myLoop();
+        //     //         }
+        //     //     }, 200)
+        //     // }
+
+        //     // myLoop();
+        // }
+
+        // update();
     });
 
 
 </script>
 
 <svg width="1080" height="720">
-<g class="everything">
-<g class="nodes">
-</g>
-</g>
 </svg>

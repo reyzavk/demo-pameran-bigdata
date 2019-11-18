@@ -27,5 +27,5 @@ with db_session:
         data = {'good': state.good, 'reject': state.reject, 'total': state.total, 'id': state.machine_id}
         data = json.dumps(data)
         conn.send(data)
-        time.sleep(0.5)
+        time.sleep(2)
 

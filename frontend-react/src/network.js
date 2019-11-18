@@ -6,6 +6,19 @@ import {nodes_data, links_data} from './data';
 
 export default function Network(props){
 
+    var nodes_data =  [
+        {'name': 'start', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 0},
+        {'name': 'a1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 1},
+        {'name': 'a2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 2},
+        {'name': 'b1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 3},
+        {'name': 'b2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 4},
+        {'name': 'c1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 5},
+        {'name': 'c2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 6},
+        {'name': 'd1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 7},
+        {'name': 'd2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 8},
+        {'name': 'd3', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 9},
+        {'name': 'd4', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 10},
+    ]
     const [open, setOpen] = React.useState(false);
     const [chosen, setChosen] = React.useState(nodes_data[0]);
 
@@ -213,7 +226,7 @@ export default function Network(props){
         webSocket.onmessage = function(event){
             var data = JSON.parse(event.data)
             var arr = nodes_data.reduce(function(arr, e, i){
-                if (e.id == data.id - 1) arr.push(i);
+                if (e.id == data.id) arr.push(i);
                 return arr;
             }, [])
 
@@ -254,6 +267,19 @@ export default function Network(props){
                     })
                     .attr('fill', circleColour)
             });
+
+
+            nodes_data = nodes.data()
+            console.log(nodes_data)
+            // var chosens = nodes_data.reduce(function(arr, e, i){
+            //     if (e.id == chosen.id) arr.push(e);
+            //     return arr;
+            // }, [])
+
+            // chosens.forEach(element => {
+            //     setChosen(element)
+            //     // console.log(element)
+            // })
 
             redraw();
         }

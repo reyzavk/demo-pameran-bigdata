@@ -29,6 +29,7 @@ export default function Network(props){
     React.useEffect(() => {
         let BASE_RADIUS = 15;
         let AVERAGE_JAM = 393.979; // avg(total - good - reject)
+        let MAX_JAM = 65536;
         let STD_JAM = 372.615 // stddev(total - good - reject)
         let AVERAGE_QUALITY = 0.907;
         let STD_QUALITY = 0.283;
@@ -130,7 +131,11 @@ export default function Network(props){
 
         function radius(d){
             var jam = d.total - d.nGoods - d.nRejects;
-            var c = jam <= 0 ? 1: (Math.abs(jam - AVERAGE_JAM) / STD_JAM) + 1;
+            jam = Math.abs(jam);
+            var c = jam <= 0 ? 1: (Math.abs(jam - AVERAGE_JAM) / STD_JAM) + 1
+            c = c > 3? 3: c
+            // var c = jam <= 0 ? 1: (Math.abs(jam - AVERAGE_JAM) / STD_JAM) + 1;
+            // console.log(c)
             return BASE_RADIUS * c;
         }
 
@@ -221,7 +226,7 @@ export default function Network(props){
 
         // UIkit.modal('#my-id').show();
 
-        var webSocket = new WebSocket('ws://master.cluster2:9000')
+        var webSocket = new WebSocket('ws://master.cluster2:5123')
 
         webSocket.onmessage = function(event){
             var data = JSON.parse(event.data)
@@ -244,7 +249,7 @@ export default function Network(props){
                 // nodes
                 circles
                     .filter(function(d, i) {return d.id == element })
-                    .transition(5000)
+                    .transition(1000)
                     .tween('radius', function(d){
                         var that = d3.select(this);
                         var g = d3.interpolate(d.nGoods, target.nGoods);
@@ -270,7 +275,7 @@ export default function Network(props){
 
 
             nodes_data = nodes.data()
-            console.log(nodes_data)
+            // console.log(nodes_data)
             // var chosens = nodes_data.reduce(function(arr, e, i){
             //     if (e.id == chosen.id) arr.push(e);
             //     return arr;

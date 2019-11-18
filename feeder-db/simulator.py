@@ -36,6 +36,8 @@ def connect_kafka_producer():
         print('Exception while connecting Kafka')
         print(ex)
 
+    return _producer
+
 db = Database()
 db.bind(provider='postgres', user='postgres', password='', database='test')
 
@@ -51,7 +53,6 @@ class State(db.Entity):
 db.generate_mapping()
 
 with db_session:
-    conn = create_connection('ws://master.cluster2:9000')
     states = select(s for s in State).order_by(State.sent_at)
     kafka_producer = connect_kafka_producer()
     for i, state in enumerate(states):

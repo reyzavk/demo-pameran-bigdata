@@ -36,8 +36,10 @@ def connect_kafka_producer():
         print('Exception while connecting Kafka')
         print(ex)
 
+    return _producer
+
 db = Database()
-db.bind(provider='postgres', user='postgres', password='', database='test')
+db.bind(provider='postgres', user='cloudera', password='', database='test')
 
 class State(db.Entity):
     _table_ = 'core_hourlystate'
@@ -51,7 +53,7 @@ class State(db.Entity):
 db.generate_mapping()
 
 with db_session:
-    conn = create_connection('ws://master.cluster2:9000')
+#    conn = create_connection('ws://master.cluster2:9000')
     states = select(s for s in State).order_by(State.sent_at)
     kafka_producer = connect_kafka_producer()
     for i, state in enumerate(states):
@@ -60,7 +62,7 @@ with db_session:
         data = {'good': state.good, 'reject': state.reject, 'total': state.total, 'id': state.machine_id}
         data = json.dumps(data)
         publish_message(kafka_producer, TOPIC, KEY, data)
-        time.sleep(2)
+        time.sleep(0.5)
     if kafka_producer is not None:
         kafka_producer.close()
 

@@ -5,7 +5,7 @@ import json
 import time
 
 db = Database()
-db.bind(provider='postgres', user='postgres', password='', database='test')
+db.bind(provider='postgres', user='cloudera', password='', database='test')
 
 class State(db.Entity):
     _table_ = 'core_hourlystate'

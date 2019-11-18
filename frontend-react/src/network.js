@@ -221,7 +221,7 @@ export default function Network(props){
 
         // UIkit.modal('#my-id').show();
 
-        var webSocket = new WebSocket('ws://master.cluster2:9000')
+        var webSocket = new WebSocket('ws://master.cluster2:5123')
 
         webSocket.onmessage = function(event){
             var data = JSON.parse(event.data)

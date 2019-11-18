@@ -1,62 +1,26 @@
-<script>
-    import * as d3 from 'd3';
-    import { onMount } from 'svelte';
-    import axios from 'axios';
-    import UIkit from 'uikit';
+import React from 'react';
+import * as d3 from 'd3';
+import Modal from '@material-ui/core/Modal';
+import FullScreenDialog from './modal';
+import {nodes_data, links_data} from './data';
 
-    let BASE_RADIUS = 15;
-    let AVERAGE_JAM = 393.979; // avg(total - good - reject)
-    let STD_JAM = 372.615 // stddev(total - good - reject)
-    let AVERAGE_QUALITY = 0.907;
-    let STD_QUALITY = 0.283;
-    let AVERAGE_SPEED = 514.498
+export default function Network(props){
 
-    var nodes_data =  [
-        {'name': 'start', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 0},
-        {'name': 'a1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 1},
-        {'name': 'a2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 2},
-        {'name': 'b1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 3},
-        {'name': 'b2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 4},
-        {'name': 'c1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 5},
-        {'name': 'c2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 6},
-        {'name': 'd1', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 7},
-        {'name': 'd2', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 8},
-        {'name': 'd3', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 9},
-        {'name': 'd4', 'nGoods': 0, 'nRejects': 0, 'total': 0, 'speed': 0, 'id': 10},
-    ]
-        
+    const [open, setOpen] = React.useState(false);
+    const [chosen, setChosen] = React.useState(nodes_data[0]);
 
-    //Sample links data 
-    //type: A for Ally, E for Enemy
-    var links_data = [
-        {'source': 0, 'target': 1},
-        {'source': 1, 'target': 2},
-        {'source': 0, 'target': 3},
-        {'source': 3, 'target': 4},
-        {'source': 0, 'target': 5},
-        {'source': 5, 'target': 6},
-        {'source': 2, 'target': 7},
-        {'source': 4, 'target': 7},
-        {'source': 6, 'target': 7},
-        {'source': 7, 'target': 8},
-        {'source': 8, 'target': 9},
-        {'source': 9, 'target': 10}
-        // {'source': 'start', 'target': 'a1'},
-        // {'source': 'a1', 'target': 'a2'},
-        // {'source': 'a2', 'target': 'd1'} ,
-        // {'source': 'd1', 'target': 'd2'},
-        // {'source': 'd2', 'target': 'd3'},
-        // {'source': 'd3', 'target': 'd4'},
-        // {'source': 'start', 'target': 'b1'},
-        // {'source': 'b1', 'target': 'b2'},
-        // {'source': 'b2', 'target': 'd1'},
-        // {'source': 'start', 'target': 'c1'},
-        // {'source': 'c1', 'target': 'c2'},
-        // {'source': 'c2', 'target': 'd1'},
-    ]
+    function handleClose(){
+        setOpen(false)
+    }
 
+    React.useEffect(() => {
+        let BASE_RADIUS = 15;
+        let AVERAGE_JAM = 393.979; // avg(total - good - reject)
+        let STD_JAM = 372.615 // stddev(total - good - reject)
+        let AVERAGE_QUALITY = 0.907;
+        let STD_QUALITY = 0.283;
+        let AVERAGE_SPEED = 514.498
 
-    onMount(() => {
 
         var svg = d3.select("svg"),
             width = +svg.attr("width"),
@@ -122,20 +86,11 @@
         var circles = nodes.append("circle")
                         .attr("r", radius)
                         .attr("fill", circleColour)
-
-        //draw circles for the nodes 
-        // var nodes = g.append("g")
-        //         .attr("class", "nodes") 
-        //         .selectAll("circle")
-        //         .data(nodes_data)
-        //         .enter()
-        //         .append("circle")
-        //         .attr("r", radius)
-        //         .attr("fill", circleColour)
-        //         // .attr("id", (d) => {
-        //         //     return d.id
-        //         // });
-       
+                        .on("click", function(d){
+                            setOpen(true)
+                            setChosen(d);
+                        })
+        
         var labels = nodes.append("text")
                         .text(function(d){
                             return "Machine " + d.name
@@ -251,14 +206,14 @@
             simulation.force('collide').initialize(nodes_data);
         }
 
-        UIkit.modal('#my-id').show();
+        // UIkit.modal('#my-id').show();
 
         var webSocket = new WebSocket('ws://localhost:9000')
 
         webSocket.onmessage = function(event){
             var data = JSON.parse(event.data)
             var arr = nodes_data.reduce(function(arr, e, i){
-                if (e.id == data.id) arr.push(i);
+                if (e.id == data.id - 1) arr.push(i);
                 return arr;
             }, [])
 
@@ -276,7 +231,7 @@
                 // nodes
                 circles
                     .filter(function(d, i) {return d.id == element })
-                    .transition(1000)
+                    .transition(5000)
                     .tween('radius', function(d){
                         var that = d3.select(this);
                         var g = d3.interpolate(d.nGoods, target.nGoods);
@@ -303,56 +258,18 @@
             redraw();
         }
 
-        // async function update(){
-        //     const response = await axios.get('http://localhost:8000/core/api/hourly-states/?ordering=sent_at')
-        //     console.log(response)
-        //     response.data.results.forEach(element => {
-        //         nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
-        //         nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
-        //         nodes_data[element.machine[element.machine.length -2]].total = element.total;
-        //         console.log("uwu");
-        //     });
-        //     // var i = 1;
-        //     // var element;
-        //     // function myLoop(){
-        //     //     setTimeout(function (){
-        //     //         element = response.data.results[i];
-        //     //         nodes_data[element.machine[element.machine.length - 2]].nGoods = element.good;
-        //     //         nodes_data[element.machine[element.machine.length - 2]].nRejects = element.reject;
-        //     //         nodes_data[element.machine[element.machine.length -2]].total = element.total;
-        //     //         console.log("uwu " + (element.machine.length - 2) + " " +  nodes_data[element.machine[element.machine.length - 2]].total)
-        //     //         i++;
-        //     //         if (i < response.data.results.length){
-        //     //             myLoop();
-        //     //         }
-        //     //     }, 200)
-        //     // }
+    }, [])
+    return (
+        <div>
+            <svg width="1080" height="720">
+            </svg>
+            <FullScreenDialog
+                open={open}
+                onClose={handleClose}
+                chosen={chosen}
+            >
+            </FullScreenDialog>
+        </div>
+    )
 
-        //     // myLoop();
-        // }
-
-        // update();
-    });
-
-
-</script>
-
-<svg width="1080" height="720">
-</svg>
-<!-- This is a button toggling the modal -->
-<button uk-toggle="target: #my-id" type="button"></button>
-
-<!-- This is the modal -->
-<div id="my-id" uk-modal>
-    <div class="uk-modal-dialog uk-modal-body">
-        <h2 class="uk-modal-title">Uwuu</h2>
-        <button class="uk-modal-close" type="button"></button>
-    </div>
-</div>
-
-<!-- UIkit CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.2.3/dist/css/uikit.min.css" />
-
-<!-- UIkit JS -->
-<script src="https://cdn.jsdelivr.net/npm/uikit@3.2.3/dist/js/uikit.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/uikit@3.2.3/dist/js/uikit-icons.min.js"></script>
+}

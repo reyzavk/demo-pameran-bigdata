@@ -105,7 +105,7 @@ with db_session:
                             reject = secrets.randbelow((int(log.total - good)  // (30 - j) // 2 + 1))
                             stocks[machine].total -= (good + reject)
 
-                        payload = {'good': good, 'reject': reject, 'total': good + total, 'id': machine}
+                        payload = {'good': good, 'reject': reject, 'total': good + reject, 'id': machine}
                         payload = json.dumps(payload)
                         publish_message(kafka_producer, TOPIC, KEY, data)
                 time.sleep(0.25)

@@ -90,25 +90,26 @@ with db_session:
                     stocks[machine] = None
 
             # stochastic for more natural looks
-            for j in range(30):
+            n_batch = 10
+            for j in range(n_batch):
                 for machine, log in stocks.items():
                     if log:
                         if log.good or log.reject:
-                            good = secrets.randbelow(int(log.good // (30 - j) + 1))
-                            reject = secrets.randbelow(int(log.reject  // (30 - j) + 1))
+                            good = secrets.randbelow(int(log.good // (n_batch - j) + 1))
+                            reject = secrets.randbelow(int(log.reject  // (n_batch - j) + 1))
 
                             stocks[machine].good -= good
                             stocks[machine].reject -= reject
                             stocks[machine].total -= (good + reject)
                         elif log.total:
-                            good = secrets.randbelow(int(log.total // (30 - j) // 2 + 1))
-                            reject = secrets.randbelow((int(log.total - good)  // (30 - j) // 2 + 1))
+                            good = secrets.randbelow(int(log.total // (n_batch - j) // 2 + 1))
+                            reject = secrets.randbelow((int(log.total - good)  // (n_batch - j) // 2 + 1))
                             stocks[machine].total -= (good + reject)
 
                         payload = {'good': good, 'reject': reject, 'total': good + reject, 'id': machine}
                         payload = json.dumps(payload)
                         publish_message(kafka_producer, TOPIC, KEY, payload)
-                time.sleep(0.25)
+                    time.sleep(0.1)
     except Exception as ex:
         print(ex)
         pass

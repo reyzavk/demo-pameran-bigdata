@@ -107,6 +107,9 @@ with db_session:
                         payload = json.dumps(payload)
                         publish_message(kafka_producer, TOPIC, KEY, data)
                 time.sleep(0.25)
+    except Exception as ex:
+        print(ex)
+        pass
 
     # conn = create_connection('ws://master.cluster2:9000')
     # states = select(s for s in State).order_by(State.sent_at)

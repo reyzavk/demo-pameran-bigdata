@@ -82,8 +82,8 @@ with db_session:
         for i in range(max_length):
             stocks = {}
             for machine, logs in data.items():
-                if len(logs) > idx:
-                    stocks[machine] = logs[idx]
+                if len(logs) > i:
+                    stocks[machine] = logs[i]
                 else:
                     stocks[machine] = None
 

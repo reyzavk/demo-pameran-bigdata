@@ -98,12 +98,12 @@ with db_session:
                             reject = secrets.randbelow(int(log.reject  // (30 - j) + 1))
 
                             stocks[machine].good -= good
-                            stock[machine].reject -= reject
-                            stock[machine].total -= (good + reject)
+                            stocks[machine].reject -= reject
+                            stocks[machine].total -= (good + reject)
                         elif log.total:
                             good = secrets.randbelow(int(log.total // (30 - j) // 2 + 1))
                             reject = secrets.randbelow((int(log.total - good)  // (30 - j) // 2 + 1))
-                            stock[machine].total -= (good + reject)
+                            stocks[machine].total -= (good + reject)
 
                         payload = {'good': good, 'reject': reject, 'total': good + total, 'id': machine}
                         payload = json.dumps(payload)

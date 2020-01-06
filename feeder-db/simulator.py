@@ -4,6 +4,7 @@ from kafka import KafkaProducer
 from pony.orm import *
 from datetime import datetime
 import time
+import secrets
 
 TOPIC = 'myapp'
 KEY = 'score'

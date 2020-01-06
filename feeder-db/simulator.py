@@ -94,15 +94,15 @@ with db_session:
                 for machine, log in stocks.items():
                     if log:
                         if log.good or log.reject:
-                            good = secrets.randbelow(log.good // (30 - j) + 1)
-                            reject = secrets.randbelow(log.reject  // (30 - j) + 1)
+                            good = secrets.randbelow(int(log.good // (30 - j) + 1))
+                            reject = secrets.randbelow(int(log.reject  // (30 - j) + 1))
 
                             stocks[machine].good -= good
                             stock[machine].reject -= reject
                             stock[machine].total -= (good + reject)
                         elif log.total:
-                            good = secrets.randbelow(log.total // (30 - j) // 2 + 1)
-                            reject = secrets.randbelow((log.total - good)  // (30 - j) // 2 + 1)
+                            good = secrets.randbelow(int(log.total // (30 - j) // 2 + 1))
+                            reject = secrets.randbelow((int(log.total - good)  // (30 - j) // 2 + 1))
                             stock[machine].total -= (good + reject)
 
                         payload = {'good': good, 'reject': reject, 'total': good + total, 'id': machine}

@@ -73,6 +73,7 @@ with db_session:
             if (s.total > 0 and s.good >= 0 and s.reject >= 0)
             ).order_by(State.sent_at)
 
+        logs = list(logs)
         data[machine] = logs
 
         if len(logs) > max_length:

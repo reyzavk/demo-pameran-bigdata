@@ -71,8 +71,7 @@ with db_session:
     for machine in machines:
         logs = select(
             s for s in State
-            # there are bad data that have negative value
-            if (s.total > 0 and s.good >= 0 and s.reject >= 0)
+            if (s.total > 0 and s.good > s.reject)
             ).order_by(State.sent_at)
 
         logs = list(logs)

@@ -109,7 +109,7 @@ with db_session:
                         payload = {'good': good, 'reject': reject, 'total': good + reject, 'id': machine}
                         payload = json.dumps(payload)
                         publish_message(kafka_producer, TOPIC, KEY, payload)
-                    time.sleep(0.1)
+                    time.sleep(0.25)
     except Exception as ex:
         print(ex)
         pass

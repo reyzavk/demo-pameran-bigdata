@@ -64,6 +64,7 @@ db.generate_mapping()
 with db_session:
     kafka_producer = connect_kafka_producer()
     machines = select(m.id for m in Machine)
+    machines = [str(machine) for machine in machines]
 
     data = {}
     max_length = 0

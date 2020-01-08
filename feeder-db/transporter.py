@@ -17,5 +17,5 @@ async def consume(states):
             good_total[state.id] += state.good
             reject_total[state.id] += state.reject
             # message = {'id': state.id, 'good': state.good, 'reject': state.reject, 'total': state.reject}
-            message = {'id': state.id, 'good': good_total[state.id], 'reject': reject_total[state.id]}
+            message = {'id': int(state.id), 'good': good_total[state.id], 'reject': reject_total[state.id]}
             conn.send(json.dumps(message))
